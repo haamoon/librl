@@ -26,7 +26,7 @@ from rl.core.function_approximators.supervised_learners import SuperRobustKerasM
 from rl.experimenter.mdps import MDP
 
 from rl.meta_rl.env_wrapper import MetaEnv
-from rl.meta_rl.agent_wrapper import LearnerGaussianPolicy
+from rl.meta_rl.agent_wrapper import LearnerPolicy
 from rl.meta_rl.pepg_wrapper import PEPGWrapper
 
 from meta_rl.builders import (environment_builder, agent_builder)
@@ -63,9 +63,8 @@ def setup_policy(agent_config, ob_shape, ac_shape, init_lstd,
     agent_config = EasyDict(agent_config)
     agent_gen, hyper_parameters = agent_builder.build(agent_config, batch_size, dim)
 
-    policy = LearnerGaussianPolicy(ob_shape, ac_shape, init_lstd=init_lstd,
-                                   agent_gen=agent_gen, hyper_parameters=hyper_parameters,
-                                   state_decoder=state_decoder)
+    policy = LearnerPolicy(ob_shape, ac_shape, agent_gen=agent_gen,
+                           hyper_parameters=hyper_parameters, state_decoder=state_decoder)
     return policy
 
 def main(c):

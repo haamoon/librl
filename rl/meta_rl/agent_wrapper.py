@@ -82,7 +82,7 @@ class LearnerFuncApp(tfFuncApp):
             self._agent.parameters = self._agent_parameters
 
 class LearnerPolicy(tfPolicy, LearnerFuncApp):
-    def __init__(self, x_shape, y_shape, name, **kwargs):
+    def __init__(self, x_shape, y_shape, name='learner_policy', **kwargs):
         super().__init__(x_shape, y_shape, name, **kwargs)
 
 class LearnerGaussianPolicy(tfGaussianPolicy, LearnerPolicy):
