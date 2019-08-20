@@ -2,8 +2,23 @@ from collections import namedtuple
 import gym
 import numpy as np
 import tensorflow as tf
+from functools import partial
 
-SpaceDescriptor = namedtuple('Space', ['shape'])
+class SpaceDescriptor(object):
+    def __init__(self, shape):
+        self.shape = shape
+
+def decoder_fn(observation, has_time_info, action_size, context_shape, observation_size):
+    ''' observation is a tf.tensor object '''
+    if has_time_info:
+        observation = observation[:-1]
+    assert(len(observation.shape) == 1 and np.prod(observation.shape) == observation_size)
+
+    action, g, contex = tf.split(observation, [action_size,
+                                               action_size,
+                                               np.prod(context_shape)])
+    contex = tf.reshape(contex, context_shape)
+    return action, g, contex
 
 class MetaEnv(gym.Env):
     def __init__(self, env_list):
@@ -58,14 +73,4 @@ class MetaEnv(gym.Env):
 
     @property
     def observation_decoder_fn(self):
-        def decoder_fn(observation, has_time_info):
-            ''' observation is a tf.tensor object '''
-            if has_time_info:
-                observation = observation[:-1]
-            assert(tuple(observation.shape) == self.observation_space.shape)
-            action, g, contex = tf.split(observation, [self.action_space.shape[0],
-                                                       self.action_space.shape[0],
-                                                       np.prod(self._context_shape)])
-            contex = tf.reshape(contex, self._context_shape)
-            return action, g, contex
-        return decoder_fn
+        return partial(decoder_fn, action_size=self.action_space.shape[0], context_shape=self._context_shape, observation_size=self.observation_space.shape[0])
