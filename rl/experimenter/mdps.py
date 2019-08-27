@@ -2,7 +2,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import time
+import time, copy
 import numpy as np
 from functools import partial
 from rl.core.datasets import Dataset
@@ -83,7 +83,7 @@ class Rollout:
         actions.)
 
     """
-    def __init__(self, obs, acs, rws,  done, logp):
+    def __init__(self, obs, acs, rws,  done, logp, weight=1.0):
         """
             `obs`, `acs`, `rws`  are lists of floats
             `done` is bool
@@ -106,6 +106,7 @@ class Rollout:
             self.lps = logp
         else:
             self.lps = logp(self.obs[:len(self)], self.acs)
+        self.weight = weight
 
     @property
     def obs_short(self):
@@ -135,7 +136,7 @@ class Rollout:
         rws=self.rws[key]
         logp=self.lps[key]
         done = bool(self.dns[key][-1])
-        rollout = Rollout(obs=obs, acs=acs, rws=rws, done=done,logp=logp)
+        rollout = Rollout(obs=obs, acs=acs, rws=rws, done=done, logp=logp)
         for name in self._Rollout__attrlist:
             setattr(rollout, name, copy.deepcopy(getattr(self, name)))
         return rollout
