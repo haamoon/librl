@@ -1,5 +1,4 @@
 from collections import namedtuple
-import gym
 import numpy as np
 import tensorflow as tf
 from functools import partial
@@ -20,8 +19,8 @@ def decoder_fn(observation, has_time_info, action_size, context_shape, observati
     contex = tf.reshape(contex, context_shape)
     return action, g, contex
 
-class MetaEnv(gym.Env):
-    def __init__(self, env_list):
+class MetaEnv():
+    def __init__(self, env_list, shuffle=True):
         if not isinstance(env_list, list):
             env_list = [env_list]
 
@@ -45,6 +44,12 @@ class MetaEnv(gym.Env):
         # TODO: rl.experimenter.mdps +194 needs this
         self._max_episode_steps = float('Inf')
 
+        self._step = 0
+        self._shuffle = shuffle
+
+    def initialize(self):
+        self._env_ind = 0
+
     def step(self, np_action):
         action = tf.convert_to_tensor(np_action)
         oracle = self._env.get_oracle(action)
@@ -52,6 +57,8 @@ class MetaEnv(gym.Env):
         g = oracle.compute_grad().numpy()
         context = self._env.context
         ob = self.get_observation(action, g, context)
+
+        self._step += 1
         return ob, -loss, False, None
 
     def get_observation(self, action, g, context):
@@ -66,11 +73,19 @@ class MetaEnv(gym.Env):
         return np.concatenate([action, g, context.ravel()])
 
     def reset(self):
-        self._env = np.random.choice(self._env_list)
+        if self._shuffle:
+            self._env = np.random.choice(self._env_list)
+        else:
+            self._env = self._env_list[self._env_ind]
+            self._env_ind = (self._env_ind + 1) % len(self._env_list)
+
         dummy_act = np.zeros(self.action_space.shape)
         ob = self.get_observation(dummy_act, dummy_act, self._env.context)
+        self._step = 0
         return ob
 
     @property
     def observation_decoder_fn(self):
-        return partial(decoder_fn, action_size=self.action_space.shape[0], context_shape=self._context_shape, observation_size=self.observation_space.shape[0])
+        return partial(decoder_fn, action_size=self.action_space.shape[0],
+                       context_shape=self._context_shape,
+                       observation_size=self.observation_space.shape[0])

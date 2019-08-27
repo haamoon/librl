@@ -2,7 +2,7 @@ from rl.core.function_approximators.tf2_function_approximators import tfFuncApp
 from rl.core.function_approximators.policies.tf2_policies import (tfPolicy,
                                                                   tfGaussianPolicy)
 
-from meta_rl.tools.utils.tf_utils import as_vars
+from meta_rl.tools.utils.tf_utils import as_vars, extract_vars, extract_values
 from meta_rl.agents import md
 import tensorflow as tf
 
@@ -28,13 +28,11 @@ class LearnerFuncApp(tfFuncApp):
         self._state_decoder = state_decoder
         super().__init__(x_shape, y_shape, name=name, **kwargs)
 
-
-
     def _set_variables(self):
-        agent = self._agent_gen(*self._hyper_parameters)
+        agent = self._agent_gen(*extract_values(self._hyper_parameters))
         self._agent_parameters = agent.parameters
 
-        hyper_variables = as_vars(self._hyper_parameters)
+        hyper_variables = as_vars(extract_vars(self._hyper_parameters))
 
         if isinstance(agent, md.MDAgent) or isinstance(agent, md.DPMDAgent):
             self._tf_variables = hyper_variables + self._agent_parameters
@@ -61,7 +59,7 @@ class LearnerFuncApp(tfFuncApp):
         try:
             assert(ts_xs.shape[0] == 1)
         except:
-            ## TODO: Hopefully we get here when log p is going to be estimated
+            ## TODO: Hopefully we only get here when log p is going to be estimated
             ## and we do not care about the returned value.
             warnings.warn('I\'m returning garbage. Make sure it is not important.')
             return self._agent.variable[tf.newaxis]
@@ -77,7 +75,7 @@ class LearnerFuncApp(tfFuncApp):
 
     def reset(self):
         self._first_iteration = True
-        self._agent = self._agent_gen(*self._hyper_parameters)
+        self._agent = self._agent_gen(*extract_values(self._hyper_parameters))
         if self._agent_parameters is not None:
             self._agent.parameters = self._agent_parameters
 
