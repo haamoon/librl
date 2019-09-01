@@ -51,10 +51,8 @@ class PEPGWrapper(ParameterExploringPolicyGradient):
 
         online_agents = [r.online_agent  for ro in ros for r in ro]
         loss_grads = average(*list(map(loss_grad, online_agents)))
-        # print(average(*[a.loss for a in agents]))
+        print(average(*[a.loss for a in online_agents]))
         self._optimizer_par.apply_gradients(zip(loss_grads, self.policy.tf_supervised_variables))
-
-
 
 
 class PEPolicyAgentWrapper(PEPolicyAgent):

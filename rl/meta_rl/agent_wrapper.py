@@ -34,12 +34,12 @@ class LearnerFuncApp(tfFuncApp):
 
         hyper_variables = as_vars(extract_vars(self._hyper_parameters))
 
-        if isinstance(agent, md.MDAgent) or isinstance(agent, md.DPMDAgent):
-            self._tf_variables = hyper_variables + self._agent_parameters
-            self._tf_supervised_variables = []
-        elif isinstance(agent, md.PMDAgent) or isinstance(agent, mp.DPMDAgent):
+        if isinstance(agent, md.PMDAgent) or isinstance(agent, md.DPMDAgent):
             self._tf_variables = hyper_variables
             self._tf_supervised_variables = self._agent_parameters
+        elif isinstance(agent, md.MDAgent) or isinstance(agent, md.DMDAgent):
+            self._tf_variables = hyper_variables + self._agent_parameters
+            self._tf_supervised_variables = []
         else:
             raise Exception('Invalid Agent Type.')
 
@@ -70,7 +70,7 @@ class LearnerFuncApp(tfFuncApp):
 
         ts_xs = ts_xs[0]
         variable, g, context = self._state_decoder(ts_xs)
-        self._agent.update(g)
+        self._agent.update(g, context=context)
         return self._agent.variable[tf.newaxis]
 
     def reset(self):

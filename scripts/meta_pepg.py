@@ -36,6 +36,8 @@ from functools import partial
 import os.path as osp
 import copy
 import pickle
+import warnings
+warnings.simplefilter('ignore', UserWarning)
 
 def setup_mdp(c, seed):
     """ Set seed and then create an MDP. """
@@ -63,9 +65,10 @@ def setup_mdp(c, seed):
     return train_mdp, test_mdp, tr_env.observation_decoder_fn
 
 def setup_policy(agent_config, ob_shape, ac_shape, init_lstd,
-        batch_size, dim, state_decoder):
+                 batch_size, dim, state_decoder, context_shape):
 
     agent_gen, hyper_parameters = agent_builder.build(agent_config, batch_size, dim)
+    agent_gen = partial(agent_gen, context_shape=context_shape)
 
     policy = LearnerPolicy(ob_shape, ac_shape, agent_gen=agent_gen,
                            hyper_parameters=hyper_parameters, state_decoder=state_decoder)
@@ -125,7 +128,8 @@ def main(c):
                           init_lstd=c['init_lstd'],
                           batch_size=1,
                           dim=c['mdp']['env']['dim'],
-                          state_decoder=state_decoder)
+                          state_decoder=state_decoder,
+                          context_shape=mdp.env._context_shape)
 
     # Save the initial state
     r = osp.join(c.top_log_dir, c.exp_name, str(c.seed), 'initial_state')
@@ -171,8 +175,8 @@ CONFIG = {
     'seed': 10,
     'mdp': {
         'envid': 'Meta',
-        'env': { 'REFERENCE': 'toy.yaml:MD:environment' },
-        'horizon': { 'REFERENCE': 'toy.yaml:MD:trainer:unroller:k'}, # the max length of rollouts in training
+        'env': { 'REFERENCE': 'default.yaml:environment' },
+        'horizon': { 'REFERENCE': 'default.yaml:trainer:unroller:k'}, # the max length of rollouts in training
         'gamma': 1.0,
         'n_processes': 8,
     },
@@ -189,11 +193,12 @@ CONFIG = {
             'max_n_rollouts': 20,
         },
 
-        'test_rollout': {'REFERENCE': 'toy.yaml:MD:test'}
+        'test_rollout': {'REFERENCE': 'default.yaml:test'}
     },
     'algorithm': {
         'optimizer':'adam',
         'lr': 1e-1,
+        'lr_par': 2e-2,
         'c': 1e-1,
         'max_kl':0.1,
         'delta':None,
@@ -202,7 +207,7 @@ CONFIG = {
         'n_warm_up_itrs':None,
         'n_pretrain_itrs':1,
     },
-    'agent': { 'REFERENCE': 'toy.yaml:MD:agent' },
+    'agent': { 'REFERENCE': 'toy.yaml:MD_MAML:agent' },
     'value_units': (128,128),
     'init_lstd': -2,
 }
