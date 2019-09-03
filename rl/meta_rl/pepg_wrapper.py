@@ -3,6 +3,7 @@ from rl.algorithms.algorithm import PolicyAgent
 from meta_rl.tools.utils.tf_utils import average
 import tensorflow as tf
 from rl.core.utils import logz
+from rl.core.utils.misc_utils import timed
 
 class PEPGWrapper(ParameterExploringPolicyGradient):
     def __init__(self, distribution,
@@ -41,18 +42,21 @@ class PEPGWrapper(ParameterExploringPolicyGradient):
         if not self.policy.tf_supervised_variables:
             return
 
-        # update other parameters by surrogate loss
-        def loss_grad(agent):
-            with tf.GradientTape() as tape:
-                tape.watch(agent.parameters)
-                loss = agent.loss
-            return tape.gradient(loss, agent.parameters,
-                                 unconnected_gradients='zero')
+        with timed('Update tf_supervised_variables'):
+            # update other parameters by surrogate loss
+            def loss_grad(agent):
+                with tf.GradientTape() as tape:
+                    tape.watch(agent.parameters)
+                    loss = agent.loss
+                return tape.gradient(loss, agent.parameters,
+                                     unconnected_gradients='zero')
 
-        online_agents = [r.online_agent  for ro in ros for r in ro]
-        loss_grads = average(*list(map(loss_grad, online_agents)))
-        print(average(*[a.loss for a in online_agents]))
-        self._optimizer_par.apply_gradients(zip(loss_grads, self.policy.tf_supervised_variables))
+            online_agents = [r.online_agent  for ro in ros for r in ro]
+            loss_grads = average(*list(map(loss_grad, online_agents)))
+            # avg_loss = average(*[a.loss for a in online_agents])
+            # logz.log_tabular('AvgLoss', avg_loss.numpy()) # XXX
+            assert len(loss_grads)==len(self.policy.tf_supervised_variables)
+            self._optimizer_par.apply_gradients(zip(loss_grads, self.policy.tf_supervised_variables))
 
 
 class PEPolicyAgentWrapper(PEPolicyAgent):
