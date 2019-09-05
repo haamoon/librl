@@ -154,8 +154,8 @@ def main(c):
 
     # Let's do some experiments!
     train_mdp = copy.deepcopy(mdp)
-    train_mdp.env._shuffle = False  # fix randomness
-    test_mdp.env._shuffle = False
+    # train_mdp.env._shuffle = False  # fix randomness
+    # test_mdp.env._shuffle = False
 
     rollout_kwargs = c['experimenter']['rollout_kwargs']
     rollout_kwargs_test0 = EasyDict(rollout_kwargs)
@@ -180,7 +180,7 @@ CONFIG = {
         'env': { 'REFERENCE': 'default.yaml:environment' },
         'horizon': { 'REFERENCE': 'default.yaml:trainer:unroller:k'}, # the max length of rollouts in training
         'gamma': 1.0,
-        'n_processes': 6,
+        'n_processes': 2,
     },
     'experimenter': {
         'run_kwargs': {
@@ -194,12 +194,11 @@ CONFIG = {
             'min_n_samples': None,
             'max_n_rollouts':{ 'REFERENCE': 'default.yaml:trainer:batch_size' },
         },
-
         'test_rollout': {'REFERENCE': 'default.yaml:test'}
     },
     'algorithm': {
         'optimizer':'adam',
-        'lr': 1e-1,
+        'lr': 5e-2,
         'lr_par': 2e-3,
         'c': 1e-1,
         'max_kl':0.1,
