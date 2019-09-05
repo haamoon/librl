@@ -171,14 +171,14 @@ CONFIG = {
     'seed': 10,
     'mdp': {
         'envid': 'Meta',
-        'env': { 'REFERENCE': 'toy.yaml:MD:environment' },
-        'horizon': { 'REFERENCE': 'toy.yaml:MD:trainer:unroller:k'}, # the max length of rollouts in training
+        'env': { 'REFERENCE': 'toy.yaml:MD_MAML:environment' },
+        'horizon': { 'REFERENCE': 'toy.yaml:MD_MAML:trainer:unroller:k'}, # the max length of rollouts in training
         'gamma': 1.0,
         'n_processes': 8,
     },
     'experimenter': {
         'run_kwargs': {
-            'n_itrs': 100,
+            'n_itrs': { 'REFERENCE': 'toy.yaml:MD_MAML:trainer:steps'},
             'pretrain': False, # True,
             'final_eval': False,
             'eval_freq': 1,
@@ -186,10 +186,10 @@ CONFIG = {
         },
         'rollout_kwargs': {
             'min_n_samples': None,
-            'max_n_rollouts': 20,
+            'max_n_rollouts': { 'REFERENCE': 'toy.yaml:MD_MAML:trainer:batch_size' },
         },
 
-        'test_rollout': {'REFERENCE': 'toy.yaml:MD:test'}
+        'test_rollout': {'REFERENCE': 'toy.yaml:MD_MAML:test'}
     },
     'algorithm': {
         'optimizer':'adam',
@@ -202,7 +202,7 @@ CONFIG = {
         'n_warm_up_itrs':None,
         'n_pretrain_itrs':1,
     },
-    'agent': { 'REFERENCE': 'toy.yaml:MD:agent' },
+    'agent': { 'REFERENCE': 'toy.yaml:MD_MAML:agent' },
     'value_units': (128,128),
     'init_lstd': -2,
 }
