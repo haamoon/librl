@@ -9,7 +9,7 @@ CONFIG = {
         'env': { 'REFERENCE': 'toy.yaml:MD_MAML:environment' },
         'horizon': { 'REFERENCE': 'toy.yaml:MD_MAML:trainer:unroller:k'}, # the max length of rollouts in training
         'gamma': 1.0,
-        'n_processes': 2,
+        'n_processes': 6,
     },
     'experimenter': {
         'run_kwargs': {
@@ -17,7 +17,7 @@ CONFIG = {
             'pretrain': False, # True,
             'final_eval': True,
             'eval_freq': 10,
-            'save_freq': 10,
+            'save_freq': None,
         },
         'rollout_kwargs': {
             'min_n_samples': None,
